@@ -2,7 +2,7 @@ import { Input } from '@/components/input'
 import { View, Text, Image, Keyboard, Alert } from 'react-native'
 import { useState } from 'react'
 
-import { MapPin, Calendar as IconCalendar, Settings2, UserRoundPlus, ArrowRight } from 'lucide-react-native'
+import { MapPin, Calendar as IconCalendar, Settings2, UserRoundPlus, ArrowRight, AtSign } from 'lucide-react-native'
 
 import { colors } from '@/styles/colors'
 import { Button } from '@/components/button'
@@ -13,6 +13,8 @@ import {calendarUtils, DatesSelected } from '@/utils/calendarUtils'
 import { DateData } from 'react-native-calendars'
 
 import dayjs from 'dayjs'
+import { GuestEmail } from '@/components/email'
+import { validateInput } from '@/utils/validateInput'
 
 enum StepForm {
     TRIP_DETAILS = 1,
@@ -30,6 +32,8 @@ export default function Index() {
     const [showModal, setShowModal] = useState(MODAL.NONE)
     const [selectedDates, setSelectedDates] = useState({} as DatesSelected)
     const [destination, setDestination] = useState('')
+    const [emailToInvite, setEmailToInvite] = useState('')
+    const [emailsToInvite, setEmailsToInvite] = useState<string[]>([])
 
 
     function handleNextStepForm(){
@@ -55,6 +59,27 @@ export default function Index() {
         })
 
         setSelectedDates(dates)
+    }
+
+    function handleRemoveEmail(emailToRemove: string){
+        setEmailsToInvite((prevState) => 
+            prevState.filter((email) => email !== emailToRemove)
+        )
+    }
+
+    function handleAddEmail() {
+        if(!validateInput.email(emailToInvite)){
+            return Alert.alert('Guest', 'Invalid email!')
+        }
+
+        const emailAlreadyExists = emailsToInvite.find((email) => email === emailToInvite)
+        
+        if(emailAlreadyExists){
+            return Alert.alert('Guest', 'Email has already been added!')
+        }
+
+        setEmailsToInvite((prevState) => [ ...prevState, emailToInvite])
+        setEmailToInvite('')
     }
 
     return(
@@ -104,7 +129,19 @@ export default function Index() {
 
                         <Input>
                             <UserRoundPlus color={colors.zinc[400]} size={20}/>
-                            <Input.Field placeholder='Who will be on the trip?'/>
+                            <Input.Field 
+                                placeholder='Who will be on the trip?'
+                                autoCorrect={false}
+                                value={ 
+                                    emailsToInvite.length > 0 ? `${emailsToInvite.length} invited people` : 
+                                    '' 
+                                }
+                                onPress={() => {
+                                    Keyboard.dismiss()
+                                    setShowModal(MODAL.GUESTS)
+                                }}
+                                showSoftInputOnFocus={false}
+                            />
                         </Input>
                     </>
                 )}
@@ -139,6 +176,47 @@ export default function Index() {
 
                     <Button onPress={() => setShowModal(MODAL.NONE)}>
                         <Button.Title>Confirm</Button.Title>
+                    </Button>
+                </View>
+            </Modal>
+
+            <Modal 
+                title='Select guests' 
+                subtitle='Guests will receive emails to confirm their participation in the trip.'
+                visible={showModal === MODAL.GUESTS}
+                onClose={() => setShowModal(MODAL.NONE)}
+            >
+               <View className='my-2 flex-wrap gap-2 border-b border-zinc-800 py-5 items-start'>
+                    {
+                        emailsToInvite.length > 0 ? (
+                            emailsToInvite.map((email) => (
+                                <GuestEmail 
+                                    key={email}
+                                    email={email}
+                                    onRemove={() => handleRemoveEmail(email)}
+                                />
+                            ))
+                        ) : (
+                            <Text className='text-zinc-600 text-base font-regular'>No email added.</Text>
+                        )
+                    }
+                </View>
+
+                <View className='gap-4 mt-4'>
+                    <Input variant='secondary'>
+                        <AtSign color={colors.zinc[400]} size={20}/>
+                        <Input.Field 
+                            placeholder='Enter the guests email' 
+                            keyboardType='email-address'
+                            onChangeText={(text) => setEmailToInvite(text.toLocaleLowerCase())}
+                            value={emailToInvite}
+                            returnKeyType='send'
+                            onSubmitEditing={handleAddEmail}
+                        />
+                    </Input>
+
+                    <Button onPress={handleAddEmail}>
+                        <Button.Title>Invite</Button.Title>
                     </Button>
                 </View>
             </Modal>
