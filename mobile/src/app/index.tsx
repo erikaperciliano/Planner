@@ -36,12 +36,12 @@ export default function Index() {
             <View className='w-full bg-zinc-900 p-4 rounded-xl my-8 border border-l-zinc-800'>
                 <Input>
                     <MapPin color={colors.zinc[400]} size={20}/>
-                    <Input.Field placeholder='Where?'/>
+                    <Input.Field placeholder='Where?' editable={ stepForm === StepForm.TRIP_DETAILS}/>
                 </Input>
 
                 <Input>
                     <IconCalendar color={colors.zinc[400]} size={20}/>
-                    <Input.Field placeholder='When?'/>
+                    <Input.Field placeholder='When?'editable={ stepForm === StepForm.TRIP_DETAILS}/>
                 </Input>
 
                 { stepForm === StepForm.ADD_EMAIL && (
