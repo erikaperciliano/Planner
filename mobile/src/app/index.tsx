@@ -15,6 +15,9 @@ import { DateData } from 'react-native-calendars'
 import dayjs from 'dayjs'
 import { GuestEmail } from '@/components/email'
 import { validateInput } from '@/utils/validateInput'
+import { tripStorage } from '@/storage/trip'
+import { router } from 'expo-router'
+import { tripServer } from '@/server/trip-server'
 
 enum StepForm {
     TRIP_DETAILS = 1,
@@ -35,6 +38,9 @@ export default function Index() {
     const [emailToInvite, setEmailToInvite] = useState('')
     const [emailsToInvite, setEmailsToInvite] = useState<string[]>([])
 
+    // LOADING
+    const[isCreatingTrip, setIsCreatingTrip] = useState(false)
+
 
     function handleNextStepForm(){
         if(destination.trim().length === 0 || !selectedDates.startsAt || !selectedDates.endsAt){
@@ -49,6 +55,17 @@ export default function Index() {
         if(stepForm === StepForm.TRIP_DETAILS){
             return setStepForm(StepForm.ADD_EMAIL)
         }
+
+        Alert.alert('New trip', 'Confirm trip?', [
+            {
+                text: 'No',
+                style: 'cancel'
+            },
+            {
+                text: 'Yes',
+                onPress: createTrip
+            }
+        ])
     }
 
     function handleSelectedDate(selectedDay: DateData){
@@ -79,7 +96,45 @@ export default function Index() {
         }
 
         setEmailsToInvite((prevState) => [ ...prevState, emailToInvite])
-        setEmailToInvite('')
+        setEmailToInvite("")
+    }
+
+    async function saveTrip(tripId: string){
+        try{
+            await tripStorage.save(tripId)
+
+            router.navigate('/trip/' + tripId)
+
+        }catch(error){
+            Alert.alert('Save trip', 'Unable to save trip ID to device.')
+            console.log(error)
+        }
+    }
+
+    async function createTrip(){
+        try {
+            setIsCreatingTrip(true)
+
+            const newTrip = await tripServer.create({
+                destination,
+                starts_at: dayjs(selectedDates.startsAt?.dateString).toString(),
+                ends_at: dayjs(selectedDates.endsAt?.dateString).toString(),
+                emails_to_invite: emailsToInvite
+            })
+
+            Alert.alert('New trip', 'Trip created with successful!', [
+                {
+                    text: 'OK. Continue.',
+                    onPress: () => saveTrip(newTrip.tripId)
+                }
+            ])
+
+        }catch(error) {
+            console.log('cai no CATCH')
+            console.log(error)
+
+            setIsCreatingTrip(false)
+        }
     }
 
     return(
@@ -146,7 +201,7 @@ export default function Index() {
                     </>
                 )}
                 
-                <Button onPress={handleNextStepForm}>
+                <Button onPress={handleNextStepForm} isLoading={isCreatingTrip}>
                     <Button.Title>
                         {
                             stepForm === StepForm.TRIP_DETAILS ? 'Continue' : 'Confirm trip'
@@ -208,7 +263,7 @@ export default function Index() {
                         <Input.Field 
                             placeholder='Enter the guests email' 
                             keyboardType='email-address'
-                            onChangeText={(text) => setEmailToInvite(text.toLocaleLowerCase())}
+                            onChangeText={(text) => setEmailToInvite(text.toLowerCase())}
                             value={emailToInvite}
                             returnKeyType='send'
                             onSubmitEditing={handleAddEmail}
