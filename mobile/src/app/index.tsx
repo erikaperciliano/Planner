@@ -1,6 +1,6 @@
 import { Input } from '@/components/input'
 import { View, Text, Image, Keyboard, Alert } from 'react-native'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { MapPin, Calendar as IconCalendar, Settings2, UserRoundPlus, ArrowRight, AtSign } from 'lucide-react-native'
 
@@ -18,6 +18,7 @@ import { validateInput } from '@/utils/validateInput'
 import { tripStorage } from '@/storage/trip'
 import { router } from 'expo-router'
 import { tripServer } from '@/server/trip-server'
+import { Loading } from '@/components/loading'
 
 enum StepForm {
     TRIP_DETAILS = 1,
@@ -37,6 +38,7 @@ export default function Index() {
     const [destination, setDestination] = useState('')
     const [emailToInvite, setEmailToInvite] = useState('')
     const [emailsToInvite, setEmailsToInvite] = useState<string[]>([])
+    const [isGettingTrip, setIsGettingTrip] = useState(true)
 
     // LOADING
     const[isCreatingTrip, setIsCreatingTrip] = useState(false)
@@ -130,11 +132,39 @@ export default function Index() {
             ])
 
         }catch(error) {
-            console.log('cai no CATCH')
             console.log(error)
 
             setIsCreatingTrip(false)
         }
+    }
+
+    async function getTrip(){
+        try{
+            const tripID = await tripStorage.get()
+
+            if(!tripID){
+                return setIsCreatingTrip(false)
+            }
+
+            const trip = await tripServer.getById(tripID)
+
+            if(trip){
+                return router.navigate('/trip/' + trip.id)
+            }
+
+        }catch(error){
+            setIsCreatingTrip(false)
+            console.log(error)
+        }
+    }
+
+    
+    useEffect(() => {
+        getTrip()
+    },[])
+
+    if(!isGettingTrip){
+        return <Loading/>
     }
 
     return(
