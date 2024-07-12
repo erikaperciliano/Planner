@@ -181,7 +181,7 @@ export default function Index() {
             </Text>
 
             <View className='w-full bg-zinc-900 p-4 rounded-xl my-8 border border-l-zinc-800'>
-                <Input>
+                <Input className='mb-6'>
                     <MapPin color={colors.zinc[400]} size={20}/>
                     <Input.Field 
                         placeholder='Where?' 
@@ -231,7 +231,7 @@ export default function Index() {
                     </>
                 )}
                 
-                <Button onPress={handleNextStepForm} isLoading={isCreatingTrip}>
+                <Button onPress={handleNextStepForm} isLoading={isCreatingTrip} className='mt-6'>
                     <Button.Title>
                         {
                             stepForm === StepForm.TRIP_DETAILS ? 'Continue' : 'Confirm trip'

@@ -109,7 +109,7 @@ export function Details({ tripId }: {tripId: string }){
             </View>
 
             <View className="flex-1 border-t border-zinc-800 mt-10">
-                <Text className="text-zinc-50 text-2xl font-semibold my-6 mt-4">
+                <Text className="text-zinc-50 text-2xl font-semibold my-6 mt-4 mb-2">
                     Guests
                 </Text>
 
