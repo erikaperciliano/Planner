@@ -1,4 +1,4 @@
-# Planner - Mobile App
+# 📱 Planner - Mobile App
 
 This application basically consists of registering and organizing travel, registering important activities/links and confirming presence.
 
